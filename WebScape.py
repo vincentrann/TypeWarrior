@@ -6,10 +6,12 @@ page = requests.get(main_url)
 all_quotes = []
 
 def getdata(url):
+    '''Returns the soup data of the given url'''
     soup = BeautifulSoup(page.content, 'html.parser')
     return soup
 
 def gettext(url):
+    '''Returns the text from the given url'''
     text_url = url
     text_page = requests.get(text_url)
     soup = BeautifulSoup(text_page.content, 'html.parser')
@@ -21,6 +23,7 @@ def gettext(url):
 
 
 def database(soup):
+    '''Returns the text data from the given soup'''
     containers = soup.findAll('td', {"style":"text-align: left;"})
     urls = []
 
@@ -32,6 +35,7 @@ def database(soup):
     return urls
 
 def check_string(file_name, string):
+    '''Checks if string is already within file_name'''
     with open(file_name, 'r') as read_obj:
         for line in read_obj:
             if string in line:
@@ -42,9 +46,11 @@ def check_string(file_name, string):
 data = getdata(main_url)
 urls = database(data)
 
+# appends 10 quotes from the text data base into all_quotes
 for i in range(0,10):
     all_quotes.append(gettext(urls[i]))
 
+# writes all non repetitive quotes from all_quotes into the AllTexts.txt
 with open('AllTexts.txt', 'a') as f:
     for line in all_quotes:
         if line != None and not check_string('AllTexts.txt', line):
