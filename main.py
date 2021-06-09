@@ -19,6 +19,7 @@ class Game:
         self.total_time = 0
         self.wpm = 0
         self.accuracy = 0
+        self.rank = ''
         self.results = ''
         self.scoreboard = []
         self.click = False
@@ -67,7 +68,7 @@ class Game:
             x = pos[0]
             y += wh
 
-    def displayResults(self):
+    def displayResults(self, screen):
         if not self.stop:
             # time
             self.total_time = time.time() - self.start_time
@@ -76,8 +77,6 @@ class Game:
             count = 0
             for i, c in enumerate(self.sentence):
                 try:
-                    print([self.final_input[i], c])
-                    print(self.final_input)
                     if self.final_input[i] == c:
                         count += 1
                 except:
@@ -88,12 +87,26 @@ class Game:
             self.wpm =  len(self.final_input)*60/(5*self.total_time)
             self.end = True
 
-            self.results = 'Time: ' + str(round(self.total_time)) + " secs Accuracy: " + str(round(self.accuracy)) + '% Wpm: ' + str(round(self.wpm))
+            # rank
+            if self.wpm <=24:
+                self.rank = 'Bronze'
+            elif self.wpm <= 30:
+                self.rank = 'Silver'
+            elif self.wpm <= 41:
+                self.rank = 'Gold'
+            elif self.wpm <= 54:
+                self.rank = 'Platinum'
+            elif self.wpm <= 79:
+                self.rank = 'Diamond'
+            elif self.wpm >= 80:
+                self.rank = 'Warrior'
+
+            self.rank_img = pygame.image.load('Season_2019_-_Bronze_2.png')
+            self.rank_img = pygame.transform.scale(self.rank_img, (100,100))
+
+            self.results = 'Time: ' + str(round(self.total_time)) + " secs Accuracy: " + str(round(self.accuracy)) + '% Wpm: ' + str(round(self.wpm)) + ' Rank: '  + self.rank
 
             pygame.display.update
-
-
-
 
     def mainGame(self):
         running = True
@@ -112,6 +125,7 @@ class Game:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    print(event.pos)
                     if self.input_box.collidepoint(event.pos):
                         self.start = True
                         self.start_time = time.time()
@@ -131,7 +145,8 @@ class Game:
                             self.final_input += event.unicode
 
             if space_count == len(words[0]):
-                self.displayResults()
+                self.displayResults(self.screen)
+                self.screen.blit(self.rank_img, (616, 295))
                 self.displayText(self.screen, self.results, 350, 28)
                 self.stop = True
 
