@@ -6,6 +6,7 @@ import random
 from operator import itemgetter
 import pickle
 scoreboard = []
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -23,17 +24,15 @@ class Game:
         self.rank = ''
         self.results = ''
         self.click = False
-        self.player_name = 'cool'
-
-        self.scoreboard = []
-
-        self.rank_img = pygame.image.load('Season_2019_-_Bronze_2.png')
-        self.rank_img = pygame.transform.scale(self.rank_img, (100, 100))
+        self.player_name = ''
+        self.player_input = False
+        self.player_text = 'Enter player name'
 
         self.input_box = pygame.Rect(50,250,650,50)
         self.exit_box = pygame.Rect(206,413,119,70)
         self.retry_box = pygame.Rect(389,411,122,73)
         self.back_box = pygame.Rect(0,0,90,40)
+        self.reset_box = pygame.Rect(660, 0, 90, 40)
 
         self.menu_bg = pygame.image.load('typewarrior.JPG')
         self.menu_bg = pygame.transform.scale(self.menu_bg, (750,500))
@@ -46,16 +45,23 @@ class Game:
         pygame.display.set_caption('Type Warrior')
 
     def getSentence(self):
+        '''
+        Returns a random quote from AllTexts.txt
+        '''
         o = open('AllTexts.txt').read()
         quotes = o.split('\n')
         quote = random.choice(quotes)
         return quote
 
     def displayText(self, screen, message, y, font_size, colour=(250,250,250)):
+        '''
+        displays the text the user types into input_box
+        '''
         font = pygame.font.Font(None, font_size)
         text = font.render(message, 1, colour)
         text_pos = text.get_rect(center= (self.w/2, y))
         screen.blit(text, text_pos)
+        # text box, changes colour when clicked
         if self.start:
             pygame.draw.rect(self.screen, (0, 0, 128), self.input_box, 2)
         else:
@@ -63,6 +69,9 @@ class Game:
         pygame.display.update()
 
     def displayScore(self,screen, message, x, y, font_size, colour=(250,250,250)):
+        '''
+        displays the score onto the score board
+        '''
         font = pygame.font.SysFont('comicsansms', font_size)
         text = font.render(message, False, colour)
         text_pos = text.get_rect(center=(x, y))
@@ -70,6 +79,9 @@ class Game:
         pygame.display.update()
 
     def displayQuote(self, screen, quote, pos, font_size, colour=(225,225,225)):
+        '''
+        displays the chosen quote onto the screen
+        '''
         font = pygame.font.Font(None, font_size)
         words = [word.split(' ') for word in quote.splitlines()]
         space = font.size(' ')[0]
@@ -88,6 +100,9 @@ class Game:
             y += wh
 
     def displayResults(self):
+        '''
+        displays the user's results after the game
+        '''
         if not self.stop:
             # time
             self.total_time = time.time() - self.start_time
@@ -144,6 +159,9 @@ class Game:
             pygame.display.update
 
     def mainGame(self):
+        '''
+        is the game window where the player will play the game
+        '''
         running = True
 
         self.resetGame()
@@ -153,64 +171,106 @@ class Game:
 
         while running:
             self.screen.fill((0,0,0))
-            # user input
+            # player name
+            if not self.player_input:
 
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.input_box.collidepoint(event.pos):
-                        self.start = True
-                        self.start_time = time.time()
-                    if self.retry_box.collidepoint(event.pos):
-                        scoreboard.append([self.player_name, round(self.wpm), self.results])
-                        with open('pickled_scoreboard.pickle', 'wb') as f:
-                            pickle.dump(scoreboard, f)
-                        self.resetGame()
-                        self.sentence = self.getSentence()
-                        words = [word.split(' ') for word in self.sentence.splitlines()]
-                        space_count = 0
-                    if self.exit_box.collidepoint(event.pos):
-                        running = False
-                        scoreboard.append([self.player_name, round(self.wpm), self.results])
-                        with open('pickled_scoreboard.pickle', 'wb') as f:
-                            pickle.dump(scoreboard, f)
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        if self.stop:
+                self.enter_button = pygame.image.load('enter button.png')
+                self.enter_button = pygame.transform.scale(self.enter_button, (150,100))
+
+                self.displayQuote(self.screen, self.player_text, (0, 0), 30)
+
+                for event in pygame.event.get():
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if self.input_box.collidepoint(event.pos):
+                            self.start = True
+                    if event.type == KEYDOWN:
+                        if event.key == K_ESCAPE:
+                            running = False
+                        if self.start:
+                            if event.key == pygame.K_BACKSPACE:
+                                self.player_name = self.player_name[:-1]
+                            elif event.key == K_RETURN:
+                                if len(self.player_name) >= 1:
+                                    self.start = False
+                                    self.player_input = True
+                            else:
+                                self.player_name += event.unicode
+                if len(self.player_name) >= 1:
+                    self.screen.blit(self.enter_button, (self.w/2-75,self.h-140))
+
+                self.displayText(self.screen, self.player_name, 274, 26)
+
+            # player input
+            if self.player_input:
+                for event in pygame.event.get():
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if self.input_box.collidepoint(event.pos):
+                            self.start = True
+                            self.start_time = time.time()
+                        if self.retry_box.collidepoint(event.pos):
+                            with open('pickled_scoreboard.pickle', 'rb')as f:
+                                scoreboard = pickle.load(f)
                             scoreboard.append([self.player_name, round(self.wpm), self.results])
-                            with open('pickled_scoreboard.pickle',  'wb') as f:
+                            with open('pickled_scoreboard.pickle', 'wb') as f:
                                 pickle.dump(scoreboard, f)
-                        running = False
-                    elif self.start and not self.stop:
-                        if event.key == pygame.K_SPACE:
-                            self.user_input = ''
-                            space_count += 1
-                            self.final_input += event.unicode
-                        elif event.key == pygame.K_BACKSPACE:
-                            self.user_input = self.user_input[:-1]
-                            self.final_input = self.final_input[:-1]
-                        else:
-                            self.user_input += event.unicode
-                            self.final_input += event.unicode
+                            self.resetGame()
+                            self.sentence = self.getSentence()
+                            words = [word.split(' ') for word in self.sentence.splitlines()]
+                            space_count = 0
+                        if self.exit_box.collidepoint(event.pos):
+                            running = False
+                            with open('pickled_scoreboard.pickle', 'rb')as f:
+                                scoreboard = pickle.load(f)
+                            scoreboard.append([self.player_name, round(self.wpm), self.results])
+                            with open('pickled_scoreboard.pickle', 'wb') as f:
+                                pickle.dump(scoreboard, f)
+                    if event.type == KEYDOWN:
+                        if event.key == K_ESCAPE:
+                            if self.stop:
+                                with open('pickled_scoreboard.pickle', 'rb')as f:
+                                    scoreboard = pickle.load(f)
+                                scoreboard.append([self.player_name, round(self.wpm), self.results])
+                                with open('pickled_scoreboard.pickle', 'wb') as f:
+                                    pickle.dump(scoreboard, f)
+                            running = False
+                        elif self.start and not self.stop:
+                            if event.key == pygame.K_SPACE:
+                                self.user_input = ''
+                                space_count += 1
+                                self.final_input += event.unicode
+                            elif event.key == pygame.K_BACKSPACE:
+                                self.user_input = self.user_input[:-1]
+                                self.final_input = self.final_input[:-1]
+                            else:
+                                self.user_input += event.unicode
+                                self.final_input += event.unicode
 
-            self.displayQuote(self.screen, self.sentence, (0, 0), 30)
+                self.displayQuote(self.screen, self.sentence, (0, 0), 30)
 
-            if space_count == len(words[0]):
-                self.displayResults()
-                self.screen.blit(self.rank_img, (616, 295))
-                self.screen.blit(self.exit_img, (self.w/4, self.h-140))
-                self.screen.blit(self.retry_img, (self.w/2, self.h-110))
-                self.displayText(self.screen, self.results, 350, 28)
-                self.stop = True
+                # player results
+                if space_count == len(words[0]):
+                    self.displayResults()
+                    self.screen.blit(self.rank_img, (616, 295))
+                    self.screen.blit(self.exit_img, (self.w/4, self.h-140))
+                    self.screen.blit(self.retry_img, (self.w/2, self.h-110))
+                    self.displayText(self.screen, self.results, 350, 28)
+                    self.stop = True
 
-            self.displayText(self.screen, self.user_input, 274, 26)
+                self.displayText(self.screen, self.user_input, 274, 26)
 
             pygame.display.update()
             self.clock.tick(60)
 
     def score(self):
+        '''
+        is the scoreboard that displays all players top scores
+        '''
         running = True
         self.screen.blit(self.score_bg, (0, 0))
 
@@ -225,6 +285,13 @@ class Game:
             with open('pickled_scoreboard.pickle', 'rb') as f:
                 new_scoreboard = pickle.load(f)
 
+            # reset scoreboard
+            if len(new_scoreboard) >= 1:
+                self.reset_button = pygame.image.load('reset button.png')
+                self.reset_button = pygame.transform.scale(self.reset_button, (90,40))
+                self.screen.blit(self.reset_button, (660,0))
+
+            # display scores
             for i in range(9):
                 self.score_box = pygame.Rect(0, 42, 750, y)
                 pygame.draw.rect(self.screen, (225, 225, 225), self.score_box, 2)
@@ -234,7 +301,7 @@ class Game:
                 num += 1
 
             if len(new_scoreboard) > 1:
-                new_scoreboard = sorted(scoreboard, key=itemgetter(1), reverse=True)
+                new_scoreboard = sorted(new_scoreboard, key=itemgetter(1), reverse=True)
                 if len(new_scoreboard) > 9:
                     del new_scoreboard[8:]
 
@@ -254,13 +321,22 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.back_box.collidepoint(event.pos):
                         running = False
-
+                    if self.reset_box.collidepoint((event.pos)):
+                        new_scoreboard = []
+                        with open('pickled_scoreboard.pickle', 'wb') as f:
+                            pickle.dump(new_scoreboard, f)
+                            running = False
                 pygame.display.update()
                 self.clock.tick(60)
 
     def menu(self):
+        '''
+        the game menu
+        '''
         while True:
             mx, my = pygame.mouse.get_pos()
+            # button_1, mainGame
+            # button_2, score
             button_1 = pygame.Rect(258, 196, 239, 109)
             button_2 = pygame.Rect(248, 349, 254, 114)
             if button_1.collidepoint((mx, my)):
@@ -294,6 +370,9 @@ class Game:
             self.clock.tick(60)
 
     def resetGame(self):
+        '''
+        resets all game attributes when called upon
+        '''
         self.start = False
         self.stop = False
         self.final_input = ''
@@ -304,6 +383,8 @@ class Game:
         self.accuracy = 0
         self.rank = ''
         self.results = ''
+        self.player_name = ''
+        self.player_input = False
 
 
 Game().menu()
