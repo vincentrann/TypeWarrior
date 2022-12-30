@@ -1,2 +1,2 @@
 # TypeWarrior
-typing speed test game for 12U Computer Science Final
+A typing game that measures how fast you can type and gives you a rank based off of it. 
