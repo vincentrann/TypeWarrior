@@ -2,7 +2,7 @@
 A typing game that gives you a rank based on how fast you can type (wpm) 
 
 # Rank System 
-- >=24 wpm: Bronze
+- 24 wpm or less: Bronze
 - <24 wpm and >=30 wpm: Silver
 - <30 wpm and >=41 wpm: Gold
 - <41 wpm and >=54 wpm: Platinum
